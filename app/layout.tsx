@@ -1,5 +1,4 @@
-// app/layout.tsx
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Cormorant_Garamond, DM_Sans } from 'next/font/google'
 import { Toaster } from 'sonner'
 import './globals.css'
@@ -22,9 +21,13 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: 'CalicePro — AIS Gestione Corsi',
   description: 'Piattaforma ufficiale per la gestione dei corsi sommelier AIS.',
-  manifest: '/manifest.json',
+}
+
+export const viewport: Viewport = {
   themeColor: '#09040A',
-  viewport: { width: 'device-width', initialScale: 1, maximumScale: 1 },
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
