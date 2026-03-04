@@ -110,6 +110,16 @@
     @apply flex items-center gap-2 px-3 py-2.5
            bg-warning/10 border border-warning/20 rounded-xl mb-2;
   }
+
+  /* ── Form fields ── */
+  .field-label {
+    @apply text-[11px] text-cream/40 mb-1.5 block;
+  }
+  .field-input {
+    @apply w-full h-10 bg-surf3 border border-white/[0.07] rounded-[10px]
+           px-3 text-sm text-cream placeholder:text-cream/20
+           outline-none focus:border-adm-acc/40 transition-colors;
+  }
 }
 
 @layer utilities {

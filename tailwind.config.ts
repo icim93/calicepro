@@ -27,9 +27,11 @@ module.exports = {
         // Roles
         doc:     '#1A4A5C',
         'doc-l': '#2A6A7C',
+        'doc-d': '#0F2A38',
         'doc-acc':'#5ABCD4',
         dir:     '#1E4A2E',
         'dir-l': '#2A6A3E',
+        'dir-d': '#0F2A1E',
         'dir-acc':'#5AC484',
         adm:     '#1E1A4A',
         'adm-l': '#2E2A6A',

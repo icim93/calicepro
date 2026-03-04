@@ -12,9 +12,9 @@ export default async function DocenteHome() {
   // Corsi assegnati
   const { data: corsi } = await supabase
     .from('corsi')
-    .select(`*, iscrizioni(count)`)
-    .eq('docente_id', utente.id)
-    .in('stato', ['attivo', 'aperto'])
+    .select('*, docente:utenti!corsi_docente_id_fkey(nome,cognome), iscrizioni(count)')
+    .order('created_at', { ascending: false })
+    .then(({ data }: { data: any[] | null }) => ({ data }))
 
   // Prossima lezione
   const corsiIds = (corsi ?? []).map(c => c.id)
