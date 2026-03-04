@@ -5,11 +5,13 @@ services:
     region: frankfurt
     plan: free
     buildCommand: npm install && npm run build
-    startCommand: npm start
+    startCommand: npm start -- -p 10000
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
       - key: NEXT_PUBLIC_SUPABASE_URL
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
