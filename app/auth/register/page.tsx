@@ -28,7 +28,6 @@ const DELEGAZIONI = ['Bari','Milano','Roma','Napoli','Torino','Firenze','Bologna
 
 export default function RegisterPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [loading, setLoading] = useState(false)
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
@@ -38,6 +37,7 @@ export default function RegisterPage() {
 
   async function onSubmit(data: FormData) {
     setLoading(true)
+    const supabase = createClient()
     const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,

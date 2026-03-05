@@ -35,6 +35,7 @@ module.exports = {
         'dir-acc':'#5AC484',
         adm:     '#1E1A4A',
         'adm-l': '#2E2A6A',
+        'adm-d': '#0F0D28',
         'adm-acc':'#8A7FD4',
         // Semantic
         success: '#5DBF7A',

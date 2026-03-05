@@ -18,7 +18,6 @@ type FormData = z.infer<typeof schema>
 
 export default function LoginPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [showPwd, setShowPwd] = useState(false)
 
@@ -28,6 +27,7 @@ export default function LoginPage() {
 
   async function onSubmit(data: FormData) {
     setLoading(true)
+    const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,

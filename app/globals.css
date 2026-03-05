@@ -111,6 +111,11 @@
            bg-warning/10 border border-warning/20 rounded-xl mb-2;
   }
 
+  /* ── Absolute icon inside input ── */
+  .abs-icon {
+    @apply absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gold-d/60;
+  }
+
   /* ── Form fields ── */
   .field-label {
     @apply text-[11px] text-cream/40 mb-1.5 block;
