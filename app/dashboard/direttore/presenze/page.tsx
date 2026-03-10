@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { formatData } from '@/lib/utils'
+import { formatData, normalizeOne } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 type Studente = {
@@ -38,6 +38,14 @@ type Corso = {
   stato: string
 }
 
+type LezioneRow = Omit<Lezione, 'corso'> & {
+  corso: Lezione['corso'] | Lezione['corso'][]
+}
+
+type IscrizioneStudenteRow = {
+  studente: Studente | Studente[]
+}
+
 const STATI_PRESENZA = ['presente', 'assente', 'giustificato'] as const
 type StatoPresenza = typeof STATI_PRESENZA[number]
 
@@ -65,11 +73,10 @@ export default function DirettorePresenze() {
   const [lezioneId, setLezioneId] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) { setUserId(user.id); loadCorsi(user.id) }
+      if (user) void loadCorsi(user.id)
     })
   }, [])
 
@@ -104,8 +111,15 @@ export default function DirettorePresenze() {
         .eq('corso_id', cid)
         .eq('stato', 'approvata'),
     ])
-    setLezioni((lezData as Lezione[]) ?? [])
-    const sList = ((studData ?? []) as any[]).map((i: any) => i.studente).filter(Boolean)
+    setLezioni(
+      ((lezData as LezioneRow[] | null) ?? []).map((item) => ({
+        ...item,
+        corso: normalizeOne(item.corso)!,
+      }))
+    )
+    const sList = ((studData as IscrizioneStudenteRow[] | null) ?? [])
+      .map((item) => normalizeOne(item.studente))
+      .filter((item): item is Studente => Boolean(item))
     setStudenti(sList)
 
     // Seleziona ultima lezione di default

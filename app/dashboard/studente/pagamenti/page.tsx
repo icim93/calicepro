@@ -35,20 +35,24 @@ export default function StudentePagamenti() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-  supabase.auth.getUser().then(({ data }) => {
-    const user = data?.user
-    if (!user) return
-    supabase
-      .from('pagamenti')
-      .select('*, corso:corsi(titolo,livello)')
-      .eq('studente_id', user.id)
-      .order('scadenza', { ascending: true })
-      .then(({ data: rows }: { data: any }) => {
-        setPagamenti(rows ?? [])
+    supabase.auth.getUser().then(({ data }) => {
+      const user = data?.user
+      if (!user) {
         setLoading(false)
-      })
-  })
-}, [])
+        return
+      }
+
+      supabase
+        .from('pagamenti')
+        .select('*, corso:corsi(titolo,livello)')
+        .eq('studente_id', user.id)
+        .order('scadenza', { ascending: true })
+        .then(({ data: rows }: { data: Pagamento[] | null }) => {
+          setPagamenti(rows ?? [])
+          setLoading(false)
+        })
+    })
+  }, [])
 
   const totDovuto = pagamenti
     .filter(p => p.stato !== 'pagato')
@@ -168,7 +172,7 @@ export default function StudentePagamenti() {
             <p className="text-4xl mb-3 opacity-30">💳</p>
             <p className="font-serif text-lg text-cream/50">Nessun pagamento</p>
             <p className="text-xs text-cream/30 mt-1">
-              Le rate appariranno dopo l'iscrizione a un corso
+              Le rate appariranno dopo l&apos;iscrizione a un corso
             </p>
           </div>
         ) : pagamenti.map(p => (

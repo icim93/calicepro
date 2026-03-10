@@ -13,8 +13,8 @@ export default async function DocenteHome() {
   const { data: corsi } = await supabase
     .from('corsi')
     .select('*, docente:utenti!corsi_docente_id_fkey(nome,cognome), iscrizioni(count)')
+    .eq('docente_id', utente.id)
     .order('created_at', { ascending: false })
-    .then(({ data }: { data: any[] | null }) => ({ data }))
 
   // Prossima lezione
   const corsiIds = (corsi ?? []).map(c => c.id)
@@ -69,7 +69,7 @@ export default async function DocenteHome() {
             Prossima lezione
           </p>
           <Link
-            href={`/dashboard/docente/lezioni/${prossima.id}`}
+            href="/dashboard/docente/calendario"
             className="mx-4 mb-4 block rounded-[18px]
                        bg-gradient-to-br from-doc/30 to-doc-d/30
                        border border-doc-acc/20 p-5
@@ -125,7 +125,7 @@ export default async function DocenteHome() {
           (corsi ?? []).map((corso, i) => (
             <Link
               key={corso.id}
-              href={`/dashboard/docente/lezioni?corso=${corso.id}`}
+              href="/dashboard/docente/calendario"
               className={`flex items-center gap-3 p-4 hover:bg-white/[0.02] transition-colors
                         ${
                           i < (corsi ?? []).length - 1

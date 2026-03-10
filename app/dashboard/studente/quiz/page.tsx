@@ -150,7 +150,7 @@ export default function StudenteQuiz() {
         <div className="px-4">
           <div className="bg-surf2 border border-white/[0.055] rounded-[18px] p-6 mb-4 text-center">
             <p className="text-5xl mb-4">🍷</p>
-            <p className="font-serif text-2xl text-cream mb-2">Preparati all'esame</p>
+            <p className="font-serif text-2xl text-cream mb-2">Preparati all&apos;esame</p>
             <p className="text-sm text-cream/50 mb-6 leading-relaxed">
               {DOMANDE.length} domande sulla tecnica di degustazione,
               vitigni e denominazioni italiane.

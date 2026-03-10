@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { formatData } from '@/lib/utils'
+import { formatData, normalizeOne } from '@/lib/utils'
 import { ChevronLeft, Plus } from 'lucide-react'
 
 type Vino = {
@@ -30,6 +30,14 @@ type Lezione = {
   titolo: string
   data: string
   corso: { titolo: string }
+}
+
+type VinoRow = Omit<Vino, 'lezione'> & {
+  lezione: Vino['lezione'] | Vino['lezione'][]
+}
+
+type LezioneRow = Omit<Lezione, 'corso'> & {
+  corso: Lezione['corso'] | Lezione['corso'][]
 }
 
 const TIPI_VINO = ['bianco', 'rosso', 'rosato', 'bollicine', 'dolce', 'passito'] as const
@@ -89,9 +97,10 @@ export default function DocenteVini() {
         .from('vini')
         .select(`
           *,
-          lezione:lezioni(id, numero, titolo, data,
-            corso:corsi(titolo))
+          lezione:lezioni!inner(id, numero, titolo, data,
+            corso:corsi!inner(titolo,docente_id))
         `)
+        .eq('lezione.corso.docente_id', uid)
         .order('created_at', { ascending: false }),
       supabase
         .from('lezioni')
@@ -99,8 +108,18 @@ export default function DocenteVini() {
         .eq('corso.docente_id', uid)
         .order('data', { ascending: false }),
     ])
-    setVini((v as Vino[]) ?? [])
-    setLezioni((l as Lezione[]) ?? [])
+    setVini(
+      ((v as VinoRow[] | null) ?? []).map((item) => ({
+        ...item,
+        lezione: normalizeOne(item.lezione)!,
+      }))
+    )
+    setLezioni(
+      ((l as LezioneRow[] | null) ?? []).map((item) => ({
+        ...item,
+        corso: normalizeOne(item.corso)!,
+      }))
+    )
     setLoading(false)
   }
 
@@ -403,7 +422,7 @@ export default function DocenteVini() {
             </div>
 
             {v.note && (
-              <p className="text-[11px] text-cream/40 italic mb-3">"{v.note}"</p>
+              <p className="text-[11px] text-cream/40 italic mb-3">&quot;{v.note}&quot;</p>
             )}
 
             {/* Azioni */}

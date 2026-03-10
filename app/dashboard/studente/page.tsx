@@ -1,7 +1,7 @@
 // app/dashboard/studente/page.tsx
 import { requireRuolo } from '@/lib/auth'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { formatData, formatEuro, percentuale, labelLivello } from '@/lib/utils'
+import { formatData, percentuale, labelLivello, normalizeOne } from '@/lib/utils'
 import Link from 'next/link'
 import { Bell, BookOpen, ClipboardCheck, GlassWater, Receipt } from 'lucide-react'
 
@@ -16,8 +16,14 @@ export default async function StudenteHome() {
     .eq('studente_id', utente.id)
     .eq('stato', 'approvata')
 
+  const iscrizioniNormalizzate =
+    (iscrizioni ?? []).map((item) => ({
+      ...item,
+      corso: normalizeOne(item.corso),
+    }))
+
   // Prossima lezione
-  const corsiIds = (iscrizioni ?? []).map(i => i.corso_id)
+  const corsiIds = iscrizioniNormalizzate.map((item) => item.corso_id)
   const { data: prossima } = corsiIds.length ? await supabase
     .from('lezioni')
     .select('*, corso:corsi(titolo,livello)')
@@ -49,7 +55,7 @@ export default async function StudenteHome() {
     .order('scadenza', { ascending: true })
     .limit(1)
 
-  const corsoCorrente = iscrizioni?.[0]?.corso
+  const corsoCorrente = iscrizioniNormalizzate[0]?.corso
   const lezioniTotali = corsoCorrente?.num_lezioni ?? 0
 
   return (
@@ -61,7 +67,7 @@ export default async function StudenteHome() {
                         border border-gold/14 p-5">
           <div className="flex items-start justify-between mb-3">
             <span className="badge badge-gold">{labelLivello(corsoCorrente.livello)}</span>
-            <Link href="/dashboard/studente/notifiche">
+            <Link href="/dashboard/studente/corsi">
               <Bell className="w-5 h-5 text-cream/30 hover:text-cream/60 transition-colors" />
             </Link>
           </div>
@@ -94,7 +100,7 @@ export default async function StudenteHome() {
       {prossima && (
         <>
           <p className="section-label text-gold-d">Prossima lezione</p>
-          <Link href={`/dashboard/studente/corsi/${prossima.corso_id}/lezioni/${prossima.id}`}
+          <Link href="/dashboard/studente/corsi"
             className="mx-4 mb-4 block rounded-[18px] border border-white/[0.055] p-4
                        bg-surf2 hover:border-gold/20 transition-all active:scale-[0.98]">
             <div className="flex items-start gap-3">
@@ -126,7 +132,7 @@ export default async function StudenteHome() {
       <p className="section-label text-gold-d">Accesso rapido</p>
       <div className="grid grid-cols-2 gap-3 px-4 mb-4">
         {[
-          { href: '/dashboard/studente/corsi',        icon: <BookOpen size={18}/>,       label: 'I miei corsi',    sub: `${iscrizioni?.length ?? 0} iscrizioni` },
+          { href: '/dashboard/studente/corsi',        icon: <BookOpen size={18}/>,       label: 'I miei corsi',    sub: `${iscrizioniNormalizzate.length} iscrizioni` },
           { href: '/dashboard/studente/degustazione',  icon: <GlassWater size={18}/>,     label: 'Cellar Book',     sub: `${deguCount ?? 0} degustazioni` },
           { href: '/dashboard/studente/quiz',          icon: <ClipboardCheck size={18}/>, label: 'Simulatore Quiz', sub: 'Preparati all\'esame' },
           { href: '/dashboard/studente/pagamenti',     icon: <Receipt size={18}/>,        label: 'Pagamenti',       sub: pagamenti?.[0] ? `⚠ Rata in scadenza` : 'In regola ✓' },
@@ -150,7 +156,7 @@ export default async function StudenteHome() {
         {[
           { n: deguCount ?? 0,      l: 'Degu',     c: 'text-gold' },
           { n: `${presenzeCount ?? 0}/${lezioniTotali}`, l: 'Presenze', c: 'text-success' },
-          { n: (iscrizioni?.length ?? 0), l: 'Corsi', c: 'text-doc-acc' },
+          { n: iscrizioniNormalizzate.length, l: 'Corsi', c: 'text-doc-acc' },
         ].map(k => (
           <div key={k.l} className="bg-surf2 border border-white/[0.055] rounded-[14px] p-3 text-center">
             <p className={`font-serif text-2xl ${k.c}`}>{k.n}</p>

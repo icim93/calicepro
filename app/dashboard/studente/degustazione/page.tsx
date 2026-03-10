@@ -376,7 +376,7 @@ export default function StudenteDegustazione() {
             {d.commento_finale && (
               <p className="text-[11px] text-cream/40 italic line-clamp-2 border-t
                             border-white/[0.04] pt-2 mt-1">
-                "{d.commento_finale}"
+                &quot;{d.commento_finale}&quot;
               </p>
             )}
           </div>

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { formatData } from '@/lib/utils'
+import { formatData, normalizeOne } from '@/lib/utils'
 import { ChevronLeft, Plus, FileText, Video, Presentation, File } from 'lucide-react'
 
 type Materiale = {
@@ -28,6 +28,14 @@ type Lezione = {
   titolo: string
   data: string
   corso: { id: string; titolo: string }
+}
+
+type MaterialeRow = Omit<Materiale, 'lezione'> & {
+  lezione: Materiale['lezione'] | Materiale['lezione'][]
+}
+
+type LezioneRow = Omit<Lezione, 'corso'> & {
+  corso: Lezione['corso'] | Lezione['corso'][]
 }
 
 const TIPI = ['pdf', 'video', 'presentazione', 'altro'] as const
@@ -100,8 +108,18 @@ export default function DocenteMateriali() {
         .eq('corso.docente_id', uid)
         .order('data', { ascending: false }),
     ])
-    setMateriali((mat as Materiale[]) ?? [])
-    setLezioni((lez as Lezione[]) ?? [])
+    setMateriali(
+      ((mat as MaterialeRow[] | null) ?? []).map((item) => ({
+        ...item,
+        lezione: normalizeOne(item.lezione)!,
+      }))
+    )
+    setLezioni(
+      ((lez as LezioneRow[] | null) ?? []).map((item) => ({
+        ...item,
+        corso: normalizeOne(item.corso)!,
+      }))
+    )
     setLoading(false)
   }
 
