@@ -9,7 +9,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/auth/login')
 
   const { data: utente } = await supabase
-    .from('utenti').select('*').eq('id', user.id).single()
+    .from('utenti').select('*').eq('id', user.id).maybeSingle()
   if (!utente) redirect('/auth/login')
 
   return <DashboardShell utente={utente}>{children}</DashboardShell>

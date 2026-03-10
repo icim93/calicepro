@@ -13,7 +13,7 @@ export async function getUtenteCorrente(): Promise<Utente | null> {
     .from('utenti')
     .select('*')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   return profilo as Utente | null
 }

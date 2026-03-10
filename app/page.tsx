@@ -12,7 +12,9 @@ export default async function RootPage() {
     .from('utenti')
     .select('ruolo')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
-  redirect(`/dashboard/${profilo?.ruolo ?? 'studente'}`)
+  if (!profilo) redirect('/auth/login')
+
+  redirect(`/dashboard/${profilo.ruolo}`)
 }

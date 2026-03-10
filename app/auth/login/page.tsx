@@ -40,8 +40,16 @@ export default function LoginPage() {
     // Fetch ruolo e redirect
     const { data: { user } } = await supabase.auth.getUser()
     const { data: profilo } = await supabase
-      .from('utenti').select('ruolo').eq('id', user!.id).single()
-    router.push(`/dashboard/${profilo?.ruolo ?? 'studente'}`)
+      .from('utenti').select('ruolo').eq('id', user!.id).maybeSingle()
+
+    if (!profilo) {
+      await supabase.auth.signOut()
+      toast.error('Profilo utente non trovato. Effettua nuovamente l’accesso o contatta l’assistenza.')
+      setLoading(false)
+      return
+    }
+
+    router.push(`/dashboard/${profilo.ruolo}`)
     router.refresh()
   }
 

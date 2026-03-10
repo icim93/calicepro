@@ -1,4 +1,3 @@
-// middleware.ts
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -10,7 +9,9 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) { return request.cookies.get(name)?.value },
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
         set(name: string, value: string, options: CookieOptions) {
           request.cookies.set({ name, value, ...options })
           response = NextResponse.next({ request: { headers: request.headers } })
@@ -25,25 +26,28 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   const path = request.nextUrl.pathname
 
-  // Rotte protette — redirect al login se non autenticato
   if (path.startsWith('/dashboard') && !user) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
-  // Se già loggato e tenta di accedere a /auth/* → redirect alla dashboard
   if (path.startsWith('/auth') && user) {
-    // Recupera il ruolo dal DB
     const { data: profilo } = await supabase
       .from('utenti')
       .select('ruolo')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
-    const ruolo = profilo?.ruolo || 'studente'
-    return NextResponse.redirect(new URL(`/dashboard/${ruolo}`, request.url))
+    // Sessione presente ma profilo assente/incompleto: lascia entrare in login.
+    if (!profilo) {
+      return response
+    }
+
+    return NextResponse.redirect(new URL(`/dashboard/${profilo.ruolo}`, request.url))
   }
 
   return response
