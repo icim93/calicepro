@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatData } from '@/lib/utils'
@@ -30,13 +30,13 @@ const labelStato: Record<string, string> = {
 
 export default function AdminIscrizioni() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(createClient)
   const [iscrizioni, setIscrizioni] = useState<Iscrizione[]>([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState('in_attesa')
   const [saving, setSaving] = useState<string | null>(null)
 
-  async function load() {
+  const load = useCallback(async () => {
     const { data } = await supabase
       .from('iscrizioni')
       .select(`
@@ -47,9 +47,9 @@ export default function AdminIscrizioni() {
       .order('created_at', { ascending: false })
     setIscrizioni((data as Iscrizione[]) ?? [])
     setLoading(false)
-  }
+  }, [supabase])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { void load() }, [load])
 
   async function aggiorna(id: string, stato: string) {
     setSaving(id)

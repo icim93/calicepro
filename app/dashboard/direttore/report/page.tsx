@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatData, formatEuro, labelLivello } from '@/lib/utils'
@@ -29,20 +29,12 @@ type StatCorso = {
 
 export default function DirettoreReport() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(createClient)
 
   const [stats, setStats] = useState<StatCorso[]>([])
   const [loading, setLoading] = useState(true)
   const [corsoSelezionato, setCorsoSelezionato] = useState<string>('tutti')
-  const [userId, setUserId] = useState<string | null>(null)
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) { setUserId(user.id); loadReport(user.id) }
-    })
-  }, [])
-
-  async function loadReport(uid: string) {
+  const loadReport = useCallback(async (uid: string) => {
     setLoading(true)
 
     const { data: corsi } = await supabase
@@ -125,7 +117,14 @@ export default function DirettoreReport() {
 
     setStats(statsCalcolate)
     setLoading(false)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) void loadReport(user.id)
+      else setLoading(false)
+    })
+  }, [loadReport, supabase])
 
   // Totali globali
   const totIscritti   = stats.reduce((s, c) => s + c.iscritti, 0)

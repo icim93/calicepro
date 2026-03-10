@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatData, labelLivello, normalizeOne } from '@/lib/utils'
@@ -60,7 +60,7 @@ const labelStato: Record<string, string> = {
 
 export default function StudenteCorsi() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(createClient)
   const [tab, setTab] = useState<'miei' | 'esplora'>('miei')
   const [iscrizioni, setIscrizioni] = useState<Iscrizione[]>([])
   const [corsiAperti, setCorsiAperti] = useState<CorsoAperto[]>([])
@@ -68,19 +68,7 @@ export default function StudenteCorsi() {
   const [iscrivendo, setIscrivendo] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        setLoading(false)
-        return
-      }
-
-      setUserId(user.id)
-      void loadAll(user.id)
-    })
-  }, [])
-
-  async function loadAll(uid: string) {
+  const loadAll = useCallback(async (uid: string) => {
     setLoading(true)
 
     const [{ data: isc }, { data: aperti }] = await Promise.all([
@@ -121,7 +109,19 @@ export default function StudenteCorsi() {
       }))
     )
     setLoading(false)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        setLoading(false)
+        return
+      }
+
+      setUserId(user.id)
+      void loadAll(user.id)
+    })
+  }, [loadAll, supabase])
 
   async function iscriviti(corsoId: string) {
     if (!userId) return

@@ -30,7 +30,7 @@ const labelStato: Record<string, string> = {
 
 export default function StudentePagamenti() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(createClient)
   const [pagamenti, setPagamenti] = useState<Pagamento[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -52,7 +52,7 @@ export default function StudentePagamenti() {
           setLoading(false)
         })
     })
-  }, [])
+  }, [supabase])
 
   const totDovuto = pagamenti
     .filter(p => p.stato !== 'pagato')

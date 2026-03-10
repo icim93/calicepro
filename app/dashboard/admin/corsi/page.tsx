@@ -22,7 +22,7 @@ type CorsoRow = Omit<Corso, 'docente'> & {
 
 export default function AdminCorsi() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(createClient)
   const [corsi, setCorsi] = useState<Corso[]>([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState('tutti')
@@ -40,7 +40,7 @@ export default function AdminCorsi() {
         setCorsi(rows)
         setLoading(false)
       })
-  }, [])
+  }, [supabase])
 
   const filtrati = corsi.filter((corso) => filtro === 'tutti' || corso.stato === filtro)
 

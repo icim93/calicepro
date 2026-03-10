@@ -52,7 +52,7 @@ function parseCSV(testo: string): RigaCSV[] {
 
 export default function DirettoreImport() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(createClient)
 
   const [fase, setFase] = useState<'upload' | 'anteprima' | 'risultato'>('upload')
   const [csvTesto, setCsvTesto] = useState('')
@@ -84,7 +84,7 @@ export default function DirettoreImport() {
           setLoadingCorsi(false)
         })
     })
-  }, [])
+  }, [supabase])
 
   function handleParsedText(testo: string) {
     setCsvTesto(testo)

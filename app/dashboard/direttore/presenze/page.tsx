@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatData, normalizeOne } from '@/lib/utils'
@@ -62,7 +62,7 @@ const labelPresenza: Record<StatoPresenza, string> = {
 
 export default function DirettorePresenze() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(createClient)
 
   const [corsi, setCorsi] = useState<Corso[]>([])
   const [lezioni, setLezioni] = useState<Lezione[]>([])
@@ -74,26 +74,37 @@ export default function DirettorePresenze() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) void loadCorsi(user.id)
-    })
-  }, [])
-
-  async function loadCorsi(uid: string) {
+  const selectLezione = useCallback(async (lid: string, studList?: Studente[]) => {
+    setLezioneId(lid)
+    const sList = studList ?? studenti
     const { data } = await supabase
-      .from('corsi')
-      .select('id, titolo, livello, stato')
-      .eq('direttore_id', uid)
-      .in('stato', ['attivo', 'aperto'])
-      .order('data_inizio', { ascending: false })
-    const list = (data as Corso[]) ?? []
-    setCorsi(list)
-    if (list.length > 0) await selectCorso(list[0].id)
-    setLoading(false)
-  }
+      .from('presenze')
+      .select('*')
+      .eq('lezione_id', lid)
+    const presenzeEsistenti = (data as Presenza[]) ?? []
 
-  async function selectCorso(cid: string) {
+    const mancanti = sList.filter(
+      s => !presenzeEsistenti.find(p => p.studente_id === s.id)
+    )
+    if (mancanti.length > 0) {
+      await supabase.from('presenze').insert(
+        mancanti.map(s => ({
+          lezione_id: lid,
+          studente_id: s.id,
+          stato: 'assente',
+        }))
+      )
+      const { data: updated } = await supabase
+        .from('presenze')
+        .select('*')
+        .eq('lezione_id', lid)
+      setPresenze((updated as Presenza[]) ?? [])
+    } else {
+      setPresenze(presenzeEsistenti)
+    }
+  }, [studenti, supabase])
+
+  const selectCorso = useCallback(async (cid: string) => {
     setCorsoId(cid)
     setLezioneId('')
     setStudenti([])
@@ -126,38 +137,27 @@ export default function DirettorePresenze() {
     if (lezData && lezData.length > 0) {
       await selectLezione((lezData as Lezione[])[0].id, sList)
     }
-  }
+  }, [selectLezione, supabase])
 
-  async function selectLezione(lid: string, studList?: Studente[]) {
-    setLezioneId(lid)
-    const sList = studList ?? studenti
+  const loadCorsi = useCallback(async (uid: string) => {
     const { data } = await supabase
-      .from('presenze')
-      .select('*')
-      .eq('lezione_id', lid)
-    const presenzeEsistenti = (data as Presenza[]) ?? []
+      .from('corsi')
+      .select('id, titolo, livello, stato')
+      .eq('direttore_id', uid)
+      .in('stato', ['attivo', 'aperto'])
+      .order('data_inizio', { ascending: false })
+    const list = (data as Corso[]) ?? []
+    setCorsi(list)
+    if (list.length > 0) await selectCorso(list[0].id)
+    setLoading(false)
+  }, [selectCorso, supabase])
 
-    // Crea presenze mancanti come 'assente'
-    const mancanti = sList.filter(
-      s => !presenzeEsistenti.find(p => p.studente_id === s.id)
-    )
-    if (mancanti.length > 0) {
-      await supabase.from('presenze').insert(
-        mancanti.map(s => ({
-          lezione_id: lid,
-          studente_id: s.id,
-          stato: 'assente',
-        }))
-      )
-      const { data: updated } = await supabase
-        .from('presenze')
-        .select('*')
-        .eq('lezione_id', lid)
-      setPresenze((updated as Presenza[]) ?? [])
-    } else {
-      setPresenze(presenzeEsistenti)
-    }
-  }
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) void loadCorsi(user.id)
+      else setLoading(false)
+    })
+  }, [loadCorsi, supabase])
 
   async function togglePresenza(studenteId: string, statoAttuale: string) {
     setSaving(studenteId)

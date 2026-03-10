@@ -19,7 +19,7 @@ type Lezione = {
 
 export default function DocenteCalendario() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(createClient)
   const [lezioni, setLezioni] = useState<Lezione[]>([])
   const [loading, setLoading] = useState(true)
   const [meseOffset, setMeseOffset] = useState(0)
@@ -37,7 +37,7 @@ export default function DocenteCalendario() {
           setLoading(false)
         })
     })
-  }, [])
+  }, [supabase])
 
   const oggi = new Date()
   const mese = new Date(oggi.getFullYear(), oggi.getMonth() + meseOffset, 1)

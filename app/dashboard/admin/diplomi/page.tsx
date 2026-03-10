@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatData } from '@/lib/utils'
@@ -31,13 +31,13 @@ const labelStato: Record<string, string> = {
 
 export default function AdminDiplomi() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(createClient)
   const [diplomi, setDiplomi] = useState<Diploma[]>([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState('idoneo')
   const [saving, setSaving] = useState<string | null>(null)
 
-  async function load() {
+  const load = useCallback(async () => {
     const { data } = await supabase
       .from('diplomi')
       .select(`
@@ -48,9 +48,9 @@ export default function AdminDiplomi() {
       .order('created_at', { ascending: false })
     setDiplomi((data as Diploma[]) ?? [])
     setLoading(false)
-  }
+  }, [supabase])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { void load() }, [load])
 
   async function emettiDiploma(id: string) {
     setSaving(id)

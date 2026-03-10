@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatData } from '@/lib/utils'
@@ -73,7 +73,7 @@ function Chip({ options, value, onChange }: {
 
 export default function StudenteDegustazione() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(createClient)
   const [degu, setDegu] = useState<Degustazione[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'lista' | 'nuova'>('lista')
@@ -81,13 +81,7 @@ export default function StudenteDegustazione() {
   const [saving, setSaving] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) { setUserId(user.id); load(user.id) }
-    })
-  }, [])
-
-  async function load(uid: string) {
+  const load = useCallback(async (uid: string) => {
     const { data } = await supabase
       .from('degustazioni')
       .select('*')
@@ -95,7 +89,18 @@ export default function StudenteDegustazione() {
       .order('created_at', { ascending: false })
     setDegu((data as Degustazione[]) ?? [])
     setLoading(false)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUserId(user.id)
+        void load(user.id)
+      } else {
+        setLoading(false)
+      }
+    })
+  }, [load, supabase])
 
   function set(k: keyof NuovaDegu, v: string | number) {
     setForm(f => ({ ...f, [k]: v }))

@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatData, formatEuro } from '@/lib/utils'
@@ -33,13 +33,13 @@ const labelStato: Record<string, string> = {
 
 export default function AdminPagamenti() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(createClient)
   const [pagamenti, setPagamenti] = useState<Pagamento[]>([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState('da_pagare')
   const [saving, setSaving] = useState<string | null>(null)
 
-  async function load() {
+  const load = useCallback(async () => {
     const { data } = await supabase
       .from('pagamenti')
       .select(`
@@ -50,9 +50,9 @@ export default function AdminPagamenti() {
       .order('scadenza', { ascending: true })
     setPagamenti((data as Pagamento[]) ?? [])
     setLoading(false)
-  }
+  }, [supabase])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { void load() }, [load])
 
   async function segnaComePagato(id: string) {
     setSaving(id)

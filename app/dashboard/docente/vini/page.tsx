@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatData, normalizeOne } from '@/lib/utils'
@@ -65,7 +65,7 @@ const labelStato: Record<string, string> = {
 
 export default function DocenteVini() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(createClient)
   const [vini, setVini] = useState<Vino[]>([])
   const [lezioni, setLezioni] = useState<Lezione[]>([])
   const [loading, setLoading] = useState(true)
@@ -85,13 +85,7 @@ export default function DocenteVini() {
     note: '',
   })
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) { setUserId(user.id); loadAll(user.id) }
-    })
-  }, [])
-
-  async function loadAll(uid: string) {
+  const loadAll = useCallback(async (uid: string) => {
     const [{ data: v }, { data: l }] = await Promise.all([
       supabase
         .from('vini')
@@ -121,7 +115,18 @@ export default function DocenteVini() {
       }))
     )
     setLoading(false)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUserId(user.id)
+        void loadAll(user.id)
+      } else {
+        setLoading(false)
+      }
+    })
+  }, [loadAll, supabase])
 
   function setF(k: string, v: string | number) {
     setForm(f => ({ ...f, [k]: v }))
