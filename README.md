@@ -32,6 +32,13 @@ supabase/migrations/002_seed.sql
 
 ### 4. Crea gli utenti di test
 
+Metodo rapido:
+```bash
+npm run setup:test-users
+```
+
+Lo script usa `SUPABASE_SERVICE_ROLE_KEY` e crea/aggiorna questi utenti con la password definita in `TEST_USERS_PASSWORD` oppure, se assente, `CalicePro2025!`.
+
 In Supabase → **Authentication → Users → Add user**:
 
 | Email | Password | Ruolo |
